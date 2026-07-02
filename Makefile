@@ -1,0 +1,25 @@
+# NOTE: THIS IS AN ELASTISYS-SPECIFIC FILE
+# It should not be part of an upstream PR
+WELKIN_CHART_PATH:=./charts/thanos
+WELKIN_CONTAINER_REGISTRY:=ghcr.io
+WELKIN_CONTAINER_REPOSITORY:=elastisys/charts
+WELKIN_EXAMPLES_PATH:=./examples
+WELKIN_BUILD_OUTPUT:=./build
+
+WELKIN_CHART_NAME:=$(shell yq .name $(WELKIN_CHART_PATH)/Chart.yaml)
+WELKIN_CHART_VERSION:=$(shell yq .version $(WELKIN_CHART_PATH)/Chart.yaml)
+
+WELKIN_BUILD_ARTIFACT:=$(WELKIN_BUILD_OUTPUT)/$(WELKIN_CHART_NAME)-$(WELKIN_CHART_VERSION).tgz
+
+all: build
+
+build:
+	@mkdir -p $(WELKIN_BUILD_OUTPUT)
+	@helm package "$(WELKIN_CHART_PATH)" --destination "$(WELKIN_BUILD_OUTPUT)" 1>/dev/null
+	@echo $(WELKIN_BUILD_ARTIFACT)
+
+push: build
+	@helm push "$(WELKIN_BUILD_ARTIFACT)" "oci://$(WELKIN_CONTAINER_REGISTRY)/$(WELKIN_CONTAINER_REPOSITORY)"
+
+clean:
+	@rm -rf $(WELKIN_BUILD_OUTPUT)
